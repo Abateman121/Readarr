@@ -2,21 +2,22 @@
 FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
 WORKDIR /src
 
-# Copy source files
-COPY src/ ./
+# Copy everything from the repository
+COPY . .
 
 # Restore packages for the entire solution
-RUN dotnet restore "Readarr.sln"
+RUN dotnet restore src/Readarr.sln
 
-# Build and publish with code analysis disabled
-RUN dotnet publish "NzbDrone.Console/Readarr.Console.csproj" \
+# Build and publish with code analysis disabled, using solution approach
+RUN dotnet publish src/NzbDrone.Console/Readarr.Console.csproj \
     -c Release \
     -o /app/publish \
     --no-restore \
     -f net6.0 \
     -p:EnableAnalyzers=false \
     -p:RunCodeAnalysis=false \
-    -p:TreatWarningsAsErrors=false
+    -p:TreatWarningsAsErrors=false \
+    -p:ErrorOnDuplicatePublishOutputFiles=false
 
 # Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:6.0 AS runtime
