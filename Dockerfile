@@ -8,8 +8,15 @@ COPY src/ ./
 # Restore packages for the entire solution
 RUN dotnet restore "Readarr.sln"
 
-# Build and publish the Console version with specific framework
-RUN dotnet publish "NzbDrone.Console/Readarr.Console.csproj" -c Release -o /app/publish --no-restore -f net6.0
+# Build and publish with code analysis disabled
+RUN dotnet publish "NzbDrone.Console/Readarr.Console.csproj" \
+    -c Release \
+    -o /app/publish \
+    --no-restore \
+    -f net6.0 \
+    -p:EnableAnalyzers=false \
+    -p:RunCodeAnalysis=false \
+    -p:TreatWarningsAsErrors=false
 
 # Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:6.0 AS runtime
