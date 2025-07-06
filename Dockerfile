@@ -8,14 +8,14 @@ COPY src/ ./
 # Restore packages for the entire solution
 RUN dotnet restore "Readarr.sln"
 
-# Build and publish the Console version (cross-platform)
-RUN dotnet publish "NzbDrone.Console/Readarr.Console.csproj" -c Release -o /app/publish --no-restore
+# Build and publish the Console version with specific framework
+RUN dotnet publish "NzbDrone.Console/Readarr.Console.csproj" -c Release -o /app/publish --no-restore -f net6.0
 
 # Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:6.0 AS runtime
 WORKDIR /app
 
-# Install required packages (removed unrar which isn't available)
+# Install required packages
 RUN apt-get update && apt-get install -y \
     curl \
     sqlite3 \
