@@ -5,12 +5,14 @@ WORKDIR /src
 # Copy source files
 COPY src/ ./
 
-# Restore dependencies for the main Readarr project
-WORKDIR /src/Readarr
-RUN dotnet restore "Readarr.csproj"
+# Copy NuGet config for custom package sources
+COPY src/NuGet.config ./
 
-# Build and publish the application
-RUN dotnet publish "Readarr.csproj" -c Release -o /app/publish --no-restore
+# Restore packages for the entire solution
+RUN dotnet restore "Readarr.sln"
+
+# Build and publish the Console version (cross-platform)
+RUN dotnet publish "NzbDrone.Console/Readarr.Console.csproj" -c Release -o /app/publish --no-restore -r linux-x64 --self-contained false
 
 # Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:6.0 AS runtime
@@ -21,6 +23,7 @@ RUN apt-get update && apt-get install -y \
     curl \
     sqlite3 \
     mediainfo \
+    unrar \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy published app
@@ -42,5 +45,7 @@ USER 1000:1000
 ENV READARR__INSTANCENAME="Readarr" \
     READARR__BRANCH="develop"
 
+# Start the application
+ENTRYPOINT ["dotnet", "Readarr.Console.dll"]
 # Start the application
 ENTRYPOINT ["dotnet", "Readarr.dll"]
