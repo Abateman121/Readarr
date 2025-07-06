@@ -5,25 +5,21 @@ WORKDIR /src
 # Copy source files
 COPY src/ ./
 
-# Copy NuGet config for custom package sources
-COPY src/NuGet.config ./
-
 # Restore packages for the entire solution
 RUN dotnet restore "Readarr.sln"
 
 # Build and publish the Console version (cross-platform)
-RUN dotnet publish "NzbDrone.Console/Readarr.Console.csproj" -c Release -o /app/publish --no-restore -r linux-x64 --self-contained false
+RUN dotnet publish "NzbDrone.Console/Readarr.Console.csproj" -c Release -o /app/publish --no-restore
 
 # Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:6.0 AS runtime
 WORKDIR /app
 
-# Install required packages
+# Install required packages (removed unrar which isn't available)
 RUN apt-get update && apt-get install -y \
     curl \
     sqlite3 \
     mediainfo \
-    unrar \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy published app
@@ -47,5 +43,3 @@ ENV READARR__INSTANCENAME="Readarr" \
 
 # Start the application
 ENTRYPOINT ["dotnet", "Readarr.Console.dll"]
-# Start the application
-ENTRYPOINT ["dotnet", "Readarr.dll"]
